@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatUp - چت و فایل‌شیرینگ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            height: 600px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+        }
+
+        .chat-section {
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .users-list h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .user-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-right: 4px solid transparent;
+        }
+
+        .user-item:hover {
+            background: #e0e0e0;
+            border-right-color: #667eea;
+        }
+
+        .user-item.active {
+            background: #667eea;
+            color: white;
+            border-right-color: #764ba2;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.sent {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.received {
+            background: #e0e0e0;
+            color: #333;
+            margin-right: auto;
+        }
+
+        .message-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .input-section {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-section input,
+        .input-section button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .input-section input {
+            flex: 1;
+            outline: none;
+        }
+
+        .input-section input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .input-section button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .input-section button:hover {
+            background: #764ba2;
+        }
+
+        .file-upload {
+            margin-bottom: 15px;
+        }
+
+        .file-upload label {
+            display: block;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .file-upload input {
+            width: 100%;
+        }
+
+        .files-list h3 {
+            color: #333;
+            margin: 20px 0 15px 0;
+            font-size: 16px;
+        }
+
+        .file-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .file-item a:hover {
+            text-decoration: underline;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .sidebar {
+                max-height: 300px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+
+        .emoji-picker {
+            display: inline-block;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        .status-online {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #4caf50;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="file-upload">
+                <label for="fileInput">📁 آپلود فایل:</label>
+                <input type="file" id="fileInput" />
+            </div>
+
+            <div class="files-list">
+                <h3>📂 فایل‌های آپلود شده:</h3>
+                <div id="filesList"></div>
+            </div>
+
+            <div class="users-list">
+                <h3>👥 کاربران آنلاین:</h3>
+                <div id="usersList"></div>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <div class="header">
+                <h1>💬 ChatUp</h1>
+                <p style="font-size: 12px; margin-top: 5px;">چت و فایل‌شیرینگ</p>
+            </div>
+
+            <div class="messages" id="messagesContainer">
+                <div class="message received">
+                    <strong>سیستم:</strong> خوش آمدید به ChatUp! 🎉
+                    <div class="message-time">همین الآن</div>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="پیام خود را بنویسید..." 
+                    onkeypress="if(event.key==='Enter') sendMessage()"
+                />
+                <button onclick="sendMessage()">📤 ارسال</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // داده‌های محلی
+        let messages = [];
+        let files = [];
+        let currentUser = 'کاربر_' + Math.floor(Math.random() * 1000);
+        let users = [currentUser];
+
+        // ارسال پیام
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+
+            if (text === '') return;
+
+            const message = {
+                user: currentUser,
+                text: text,
+                time: new Date().toLocaleTimeString('fa-IR'),
+                sent: true
+            };
+
+            messages.push(message);
+            input.value = '';
+            displayMessages();
+
+            // شبیه‌سازی پاسخ
+            setTimeout(() => {
+                const reply = {
+                    user: 'دستیار',
+                    text: '✅ پیام شما دریافت شد!',
+                    time: new Date().toLocaleTimeString('fa-IR'),
+                    sent: false
+                };
+                messages.push(reply);
+                displayMessages();
+            }, 1000);
+        }
+
+        // نمایش پیام‌ها
+        function displayMessages() {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = messages.map(msg => `
+                <div class="message ${msg.sent ? 'sent' : 'received'}">
+                    <strong>${msg.user}:</strong> ${msg.text}
+                    <div class="message-time">${msg.time}</div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // آپلود فایل
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const fileData = {
+                name: file.name,
+                size: (file.size / 1024).toFixed(2) + ' KB',
+                uploadedBy: currentUser,
+                uploadedAt: new Date().toLocaleTimeString('fa-IR')
+            };
+
+            files.push(fileData);
+            displayFiles();
+
+            // پیام در چت
+            const message = {
+                user: currentUser,
+                text: `📎 فایل آپلود شد: ${file.name}`,
+                time: new Date().toLocaleTimeString('fa-IR'),
+                sent: true
+            };
+            messages.push(message);
+            displayMessages();
+        });
+
+        // نمایش فایل‌ها
+        function displayFiles() {
+            const filesList = document.getElementById('filesList');
+            filesList.innerHTML = files.map((file, idx) => `
+                <div class="file-item">
+                    <div>
+                        <strong>📄 ${file.name}</strong>
+                        <div class="file-size">${file.size} | توسط ${file.uploadedBy}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // نمایش کاربران
+        function displayUsers() {
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = users.map(user => `
+                <div class="user-item ${user === currentUser ? 'active' : ''}">
+                    👤 ${user}
+                    <span class="status-online"></span>
+                </div>
+            `).join('');
+        }
+
+        // شبیه‌سازی کاربران
+        function addRandomUser() {
+            const newUser = 'کاربر_' + Math.floor(Math.random() * 10000);
+            if (!users.includes(newUser)) {
+                users.push(newUser);
+                displayUsers();
+            }
+        }
+
+        // شروع
+        displayMessages();
+        displayUsers();
+        setInterval(addRandomUser, 5000);
+    </script>
+</body>
+</html>
